@@ -10,6 +10,7 @@ from torch.nn import functional as F
 import os
 import numpy as np
 import cv2
+import urllib.request
 from PIL import Image
 
 
@@ -58,8 +59,7 @@ def load_labels():
         labels_attribute = [item.rstrip() for item in lines]
     file_name_W = 'W_sceneattribute_wideresnet18.npy'
     if not os.access(file_name_W, os.W_OK):
-        synset_url = 'http://places2.csail.mit.edu/models_places365/W_sceneattribute_wideresnet18.npy'
-        os.system('wget ' + synset_url)
+        urllib.request.urlretrieve('http://places2.csail.mit.edu/models_places365', 'W_sceneattribute_wideresnet18.npy')
     W_attribute = np.load(file_name_W)
 
     return classes, labels_IO, labels_attribute, W_attribute
@@ -96,8 +96,8 @@ def load_model():
 
     model_file = 'wideresnet18_places365.pth.tar'
     if not os.access(model_file, os.W_OK):
-        os.system('wget http://places2.csail.mit.edu/models_places365/' + model_file)
-        os.system('wget https://raw.githubusercontent.com/csailvision/places365/master/wideresnet.py')
+        urllib.request.urlretrieve('http://places2.csail.mit.edu/models_places365', 'wideresnet18_places365.pth.tar')
+        urllib.request.urlretrieve('https://raw.githubusercontent.com/csailvision/places365/master', 'wideresnet.py')
 
     import wideresnet
     model = wideresnet.resnet18(num_classes=365)
@@ -148,8 +148,8 @@ weight_softmax[weight_softmax<0] = 0
 
 # load the test image
 img_url = 'http://places.csail.mit.edu/demo/6.jpg'
-os.system('wget %s -q -O test.jpg' % img_url)
-img = Image.open('test.jpg')
+# os.system('wget %s -q -O test.jpg' % img_url)
+img = Image.open('images/unity bedroom.jpg')
 input_img = V(tf(img).unsqueeze(0))
 
 # forward pass
@@ -185,7 +185,7 @@ print('Class activation map is saved as cam.jpg')
 CAMs = returnCAM(features_blobs[0], weight_softmax, [idx[0]])
 
 # render the CAM and output
-img = cv2.imread('test.jpg')
+img = cv2.imread('images/unity bedroom.jpg')
 height, width, _ = img.shape
 heatmap = cv2.applyColorMap(cv2.resize(CAMs[0],(width, height)), cv2.COLORMAP_JET)
 result = heatmap * 0.4 + img * 0.5
